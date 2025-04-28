@@ -8,7 +8,7 @@ import vue from '@vitejs/plugin-vue'
 //   plugins: [vue()],
 // })
 
-export default defineConfig(({ mode}) => {
+export default defineConfig(({}) => {
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
 

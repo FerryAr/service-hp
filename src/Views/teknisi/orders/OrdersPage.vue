@@ -12,7 +12,6 @@ import { DateTime } from "luxon";
 import { io } from "socket.io-client";
 import type { UseWebNotificationOptions } from "@vueuse/core";
 import { useWebNotification } from "@vueuse/core";
-import UsersService from "../../../services/UsersService";
 
 const authStore = useAuthStore();
 const ordersService = new OrdersService();
@@ -254,6 +253,7 @@ async function after(orderId: number) {
     toast.error("Gagal upload foto after", {
       autoClose: 5000,
     });
+    $loader.hide();
   }
 }
 

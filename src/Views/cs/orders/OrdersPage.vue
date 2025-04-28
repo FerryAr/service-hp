@@ -49,7 +49,6 @@ const state = reactive({
 });
 
 const orders = ref([] as Orders[]);
-const teknisi = ref([] as any[]);
 
 const baseApiUrl = import.meta.env.VITE_API_BASE_URL;
 

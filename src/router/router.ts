@@ -7,7 +7,7 @@ const routes: RouteRecordRaw[] = [
         path: '/',
         name: 'login-home',
         component: () => import('../Views/Auth/LoginPage.vue'),
-        beforeEnter: (to, from, next) => {
+        beforeEnter: (_to, _from, next) => {
             const authStore = useAuthStore();
             if(authStore.isAuthenticated) {
                 if(authStore.user.role === Role.CS) {
@@ -26,7 +26,7 @@ const routes: RouteRecordRaw[] = [
         path: '/login',
         name: 'login',
         component: () => import('../Views/Auth/LoginPage.vue'),
-        beforeEnter: (to, from, next) => {
+        beforeEnter: (_to, _from, next) => {
             const authStore = useAuthStore();
             if(authStore.isAuthenticated) {
                 if(authStore.user.role === Role.CS) {
@@ -45,7 +45,7 @@ const routes: RouteRecordRaw[] = [
         name: 'cs',
         path: '/cs',
         component: () => import('../Views/layouts/master.vue'),
-        beforeEnter: (to, from, next) => {
+        beforeEnter: (_to, _from, next) => {
             const authStore = useAuthStore();
             if(authStore.isAuthenticated && authStore.user.role === Role.CS) {
                 next();
@@ -70,7 +70,7 @@ const routes: RouteRecordRaw[] = [
         name: 'kepala-teknisi',
         path: '/kepala-teknisi',
         component: () => import('../Views/layouts/master.vue'),
-        beforeEnter: (to, from, next) => {
+        beforeEnter: (_to, _from, next) => {
             const authStore = useAuthStore();
             if(authStore.isAuthenticated && authStore.user.role === Role.KEPALA_TEKNISI) {
                 next();
@@ -95,7 +95,7 @@ const routes: RouteRecordRaw[] = [
         path: '/teknisi',
         name: 'teknisi',
         component: () => import('../Views/layouts/master.vue'),
-        beforeEnter: (to, from, next) => {
+        beforeEnter: (_to, _from, next) => {
             const authStore = useAuthStore();
             if(authStore.isAuthenticated && authStore.user.role === Role.TEKNISI) {
                 next();

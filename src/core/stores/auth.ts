@@ -2,7 +2,7 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 import AuthService from "../../services/AuthService";
 import UsersService from "../../services/UsersService";
-import { type User, Role } from "../types/user";
+import { type User } from "../types/user";
 import { AxiosError } from "axios";
 import router from "../../router/router";
 
