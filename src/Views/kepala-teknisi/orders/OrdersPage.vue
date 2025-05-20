@@ -497,6 +497,22 @@ onUnmounted(() => {
               <div>{{ selectedOrder.no_hp_pelanggan }}</div>
             </div>
             <div class="mb-3">
+              <label>Merk HP:</label>
+              <div>{{ selectedOrder.merkHp }}</div>
+            </div>
+            <div class="mb-3">
+              <label>Model HP:</label>
+              <div>{{ selectedOrder.modelHp }}</div>
+            </div>
+            <div class="mb-3">
+              <label>Seri HP:</label>
+              <div>{{ selectedOrder.seriHp }}</div>
+            </div>
+            <div class="mb-3">
+              <label>IMEI HP:</label>
+              <div>{{ selectedOrder.imeiHp }}</div>
+            </div>
+            <div class="mb-3">
               <label>Keterangan:</label>
               <div>{{ selectedOrder.keterangan }}</div>
             </div>

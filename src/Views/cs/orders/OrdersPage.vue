@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Modal } from "bootstrap";
-import { onMounted, onUnmounted, reactive, ref } from "vue";
+import { onMounted, onUnmounted, reactive, ref, watch } from "vue";
 import { toast } from "vue3-toastify";
 import "vue3-toastify/dist/index.css";
 import OrdersService from "../../../services/OrdersService";
@@ -10,17 +10,71 @@ import { useLoading } from "vue-loading-overlay";
 import type { Orders } from "../../../core/types/orders";
 import { DateTime } from "luxon";
 import { io } from "socket.io-client";
-import { useWebNotification, type UseWebNotificationOptions } from "@vueuse/core";
+import { useUserMedia, useWebNotification, type UseWebNotificationOptions } from "@vueuse/core";
 import Swal from "sweetalert2";
 
 const authStore = useAuthStore();
 const ordersService = new OrdersService();
 const $loading = useLoading();
 
+const videoRef = ref<HTMLVideoElement | null>(null)
+const canvasRef = ref<HTMLCanvasElement | null>(null)
+const constraints = ref<MediaStreamConstraints>({ video: true, audio: false })
+const { stream, start, stop } = useUserMedia({
+  constraints,
+  autoSwitch: true,
+  enabled: true,
+})
+
+watch(stream, (mediaStream) => {
+  if (mediaStream && videoRef.value) {
+    videoRef.value.srcObject = mediaStream
+  }
+})
+
+function onVideoReady() {
+  videoRef.value?.play()
+}
+
+function getCanvasBlob(canvas: HTMLCanvasElement, type = 'image/png', quality?: number): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(blob => {
+      if (blob) resolve(blob)
+      else reject(new Error('Failed to convert canvas to Blob'))
+    }, type, quality)
+  })
+}
+
+
+async function snap(): Promise<Blob | null> {
+  const video = videoRef.value!
+  const canvas = canvasRef.value!
+  // Match canvas size to video
+  canvas.width = video.videoWidth
+  canvas.height = video.videoHeight
+  // Draw the current frame
+  const ctx = canvas.getContext('2d')!
+  ctx.drawImage(video, 0, 0)
+
+  try {
+    const blob = await getCanvasBlob(canvas, 'image/png')
+    
+    return blob;
+  }
+  catch (err) {
+    console.error(err)
+    return null;
+  }
+}
+
 const form = reactive({
   namaPelanggan: "",
   alamatPelanggan: "",
   noHpPelanggan: "",
+  merkHp: "",
+  modelHp: "",
+  seriHp: "",
+  imeiHp: "",
   keterangan: "",
   fotoHp: [] as File[],
 });
@@ -129,6 +183,10 @@ async function createOrder() {
     form.namaPelanggan === "" ||
     form.alamatPelanggan === "" ||
     form.noHpPelanggan === "" ||
+    form.merkHp === "" ||
+    form.modelHp === "" ||
+    form.seriHp === "" ||
+    form.imeiHp === "" ||
     form.keterangan === "" ||
     form.fotoHp.length === 0
   ) {
@@ -144,15 +202,33 @@ async function createOrder() {
     opacity: 0.5,
     zIndex: 9999,
   });
+
+  const csShot = await snap();
+    if(!csShot) {
+    Swal.fire({
+      icon: "error",
+      title: "Gagal",
+      text: "Gagal mengambil foto CS",
+      confirmButtonText: "OK",
+    })
+    return;
+  }
+
   try {
     const formData = new FormData();
     formData.append("nama_pelanggan", form.namaPelanggan);
     formData.append("alamat_pelanggan", form.alamatPelanggan);
     formData.append("no_hp_pelanggan", form.noHpPelanggan);
+    formData.append("merk_hp", form.merkHp);
+    formData.append("model_hp", form.modelHp);
+    formData.append("seri_hp", form.seriHp);
+    formData.append("imei_hp", form.imeiHp);
     formData.append("keterangan", form.keterangan);
     for (let i = 0; i < form.fotoHp.length; i++) {
-      formData.append("fotoHp[]", form.fotoHp[i]);
+      formData.append("fotoHp", form.fotoHp[i]);
     }
+    formData.append("csShot", csShot as Blob);
+
 
     await ordersService.createOrder(formData, {
       headers: {
@@ -260,6 +336,7 @@ onMounted(() => {
     console.log(e);
   }
   getOrders();
+  start();
 
   setInterval(() => {
     getOrders();
@@ -283,6 +360,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   socket.disconnect();
+  stop()
 });
 
 </script>
@@ -337,7 +415,7 @@ onUnmounted(() => {
                   class="fw-bold">{{ order.no_order }}</td>
                   <td
                   :class="order.status === 'draft' ? 'text-white' : ''"
-                  class="fw-bold">{{ order.nama_pelanggan }}</td>1
+                  class="fw-bold">{{ order.nama_pelanggan }}</td>
                   <td
                   :class="order.status === 'draft' ? 'text-white' : ''"
                   class="fw-bold">{{ order.status }}</td>
@@ -385,7 +463,7 @@ onUnmounted(() => {
   </div>
 
   <div class="modal fade" id="modalAdd" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-scrollable">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">Tambah Pesanan</h5>
@@ -422,6 +500,42 @@ onUnmounted(() => {
               class="form-control"
               id="customerPhone"
               v-model="form.noHpPelanggan"
+            />
+          </div>
+          <div class="mb-3">
+            <label for="brand" class="form-label">Merk HP</label>
+            <input
+              type="text"
+              class="form-control"
+              id="brand"
+              v-model="form.merkHp"
+            />
+          </div>
+          <div class="mb-3">
+            <label for="model" class="form-label">Model HP</label>
+            <input
+              type="text"
+              class="form-control"
+              id="model"
+              v-model="form.modelHp"
+            />
+          </div>
+          <div class="mb-3">
+            <label for="series" class="form-label">Seri HP</label>
+            <input
+              type="text"
+              class="form-control"
+              id="series"
+              v-model="form.seriHp"
+            />
+          </div>
+          <div class="mb-3">
+            <label for="imei" class="form-label">IMEI HP</label>
+            <input
+              type="text"
+              class="form-control"
+              id="imei"
+              v-model="form.imeiHp"
             />
           </div>
           <div class="mb-3">
@@ -463,6 +577,19 @@ onUnmounted(() => {
                 <i class="bi bi-x"></i>
               </button>
             </div>
+          </div>
+          <div class="mb-3">
+              <video
+              ref="videoRef"
+              autoplay
+              playsinline
+              v-if="stream"
+              @loadedmetadata="onVideoReady"
+              class="video-preview"
+            />
+            
+          <canvas ref="canvasRef" style="display:none;" />
+
           </div>
         </div>
         <div class="modal-footer">
@@ -509,6 +636,22 @@ onUnmounted(() => {
             <div class="mb-3">
               <label>No HP Pelanggan:</label>
               <div>{{ selectedOrder.no_hp_pelanggan }}</div>
+            </div>
+            <div class="mb-3">
+              <label>Merk HP:</label>
+              <div>{{ selectedOrder.merkHp }}</div>
+            </div>
+            <div class="mb-3">
+              <label>Model HP:</label>
+              <div>{{ selectedOrder.modelHp }}</div>
+            </div>
+            <div class="mb-3">
+              <label>Seri HP:</label>
+              <div>{{ selectedOrder.seriHp }}</div>
+            </div>
+            <div class="mb-3">
+              <label>IMEI HP:</label>
+              <div>{{ selectedOrder.imeiHp }}</div>
             </div>
             <div class="mb-3">
               <label>Keterangan:</label>
@@ -563,4 +706,10 @@ onUnmounted(() => {
   .bg-purple {
     background-color: var(--bs-purple);
   }
+
+  .video-preview {
+  max-width: 100%;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
 </style>

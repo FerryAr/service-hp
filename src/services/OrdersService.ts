@@ -24,6 +24,10 @@ export default class OrdersService extends BaseService {
         return await this.delete(`/${id}`, config);
     }
 
+    async getOrderByNoOrder(noOrder: string, config: {}) {
+        return await this.get(`/details/${noOrder}`, config);
+    }
+
     async kepalaTeknisiTakeoverOrder(id: number, config: {}) {
         return await this.put(`/kt/${id}`, {}, config);
     }

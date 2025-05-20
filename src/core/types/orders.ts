@@ -1,4 +1,5 @@
 import type { OrderMedia } from "./orderMedia";
+import type { OrderTimeline } from "./orderTimeline";
 import type { User } from "./user";
 
 export type Orders = {
@@ -7,6 +8,10 @@ export type Orders = {
     nama_pelanggan:       string;
     alamat_pelanggan:     string;
     no_hp_pelanggan:      string;
+    merkHp:             string;
+    modelHp:          string;
+    seriHp:            string;
+    imeiHp:            string;
     keterangan:           string;
     cs_transfer_deadline: null;
     bongkar_deadline:     null;
@@ -16,12 +21,14 @@ export type Orders = {
     status:               string;
     createdAt:          Date;
     updatedAt:          Date;
+    OrderTimeline:      OrderTimeline[];
     kepala_teknisi:      User | null;
     teknisi:            User | null;
     fotoHp:             FotoHP | null;
 }
 
 export interface FotoHP {
+    csShot: OrderMedia[];
     arrival: OrderMedia[];
     bongkar: OrderMedia[];
     before: OrderMedia[];
